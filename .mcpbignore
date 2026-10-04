@@ -1,0 +1,4 @@
+Dockerfile
+glama.json
+.venv/
+__pycache__/

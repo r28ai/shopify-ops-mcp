@@ -1,0 +1,306 @@
+{
+  "manifest_version": "0.4",
+  "name": "shopify-ops-mcp",
+  "display_name": "Shopify Store Ops",
+  "version": "0.1.0",
+  "description": "Low-stock reorders, where-is-my-order replies, daily sales digests and catalogue imports.",
+  "author": {
+    "name": "R28 AI, Inc.",
+    "url": "https://r28.ai"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/r28ai/shopify-ops-mcp"
+  },
+  "homepage": "https://github.com/r28ai/shopify-ops-mcp",
+  "license": "Apache-2.0",
+  "keywords": [
+    "charter",
+    "shopify",
+    "google sheets",
+    "gmail",
+    "slack",
+    "firecrawl",
+    "linear",
+    "stripe"
+  ],
+  "server": {
+    "type": "uv",
+    "entry_point": "src/server.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "${__dirname}",
+        "src/server.py"
+      ],
+      "env": {
+        "SHOPIFY_SHOP": "${user_config.shopify_shop}",
+        "SHOPIFY_CLIENT_ID": "${user_config.shopify_client_id}",
+        "SHOPIFY_CLIENT_SECRET": "${user_config.shopify_client_secret}",
+        "GOOGLE_CLIENT_ID": "${user_config.google_client_id}",
+        "GOOGLE_CLIENT_SECRET": "${user_config.google_client_secret}",
+        "SLACK_BOT_TOKEN": "${user_config.slack_bot_token}",
+        "FIRECRAWL_API_KEY": "${user_config.firecrawl_api_key}",
+        "LINEAR_API_KEY": "${user_config.linear_api_key}",
+        "STRIPE_API_KEY": "${user_config.stripe_api_key}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "shopify_products_list",
+      "description": "List products."
+    },
+    {
+      "name": "shopify_variant_inventory_level",
+      "description": "Read a variant's stock at one location."
+    },
+    {
+      "name": "gsheets_spreadsheets_values_append",
+      "description": "Appends values to a spreadsheet."
+    },
+    {
+      "name": "gmail_drafts_create",
+      "description": "Save an email draft to Gmail."
+    },
+    {
+      "name": "shopify_orders_list",
+      "description": "List orders."
+    },
+    {
+      "name": "slack_chat_post_message",
+      "description": "Send a message to a Slack channel, private group, or DM."
+    },
+    {
+      "name": "gmail_threads_list",
+      "description": "List Gmail threads."
+    },
+    {
+      "name": "shopify_order_fulfillment_orders",
+      "description": "List an order's fulfillment orders, which is the first half of fulfilling it."
+    },
+    {
+      "name": "firecrawl_monitor_create",
+      "description": "Create a scheduled monitor for scrape, crawl, or search targets."
+    },
+    {
+      "name": "firecrawl_extract",
+      "description": "Extract structured data from one or more URLs using an LLM."
+    },
+    {
+      "name": "shopify_product_get",
+      "description": "Get one product with its description and its first 50 variants, including each variant's SKU, price and inventory."
+    },
+    {
+      "name": "gsheets_spreadsheets_values_get",
+      "description": "Returns a range of values from a spreadsheet."
+    },
+    {
+      "name": "shopify_product_create",
+      "description": "Create a product."
+    },
+    {
+      "name": "shopify_product_variants_bulk_create",
+      "description": "Add variants to a product."
+    },
+    {
+      "name": "firecrawl_scrape",
+      "description": "Scrape a single URL and optionally extract information."
+    },
+    {
+      "name": "shopify_product_update",
+      "description": "Update a product."
+    },
+    {
+      "name": "gmail_threads_get",
+      "description": "Read a Gmail thread."
+    },
+    {
+      "name": "shopify_customers_list",
+      "description": "List customers."
+    },
+    {
+      "name": "shopify_draft_order_create",
+      "description": "Create a draft order, the way to build an order by hand before it is placed."
+    },
+    {
+      "name": "shopify_order_get",
+      "description": "Get one order with its line items, shipping address and totals."
+    },
+    {
+      "name": "shopify_order_cancel",
+      "description": "Cancel an order."
+    },
+    {
+      "name": "gsheets_spreadsheets_values_update",
+      "description": "Sets values in a range of a spreadsheet."
+    },
+    {
+      "name": "linear_issue_create",
+      "description": "Create an issue."
+    },
+    {
+      "name": "shopify_locations_list",
+      "description": "List the store's locations."
+    },
+    {
+      "name": "shopify_inventory_adjust_quantities",
+      "description": "Move stock by a relative amount: `delta` of 5 adds five, -5 removes five."
+    },
+    {
+      "name": "stripe_balance_transactions_list",
+      "description": "List every movement across the Stripe balance: charges, refunds, fees and payouts."
+    },
+    {
+      "name": "connection_status",
+      "description": "Which apps this server can reach, and how to connect the rest. Changes nothing."
+    },
+    {
+      "name": "connect",
+      "description": "Connect one app: where to get its key, or the Google sign-in in the browser."
+    }
+  ],
+  "prompts": [
+    {
+      "name": "setup",
+      "description": "Connect the apps this server uses.",
+      "text": "Help me connect the apps this server uses.\n\n1. Call `connection_status` to see what is connected.\n2. For each app it lists as not connected, call `connect` with that app. Where that opens a browser sign-in, tell me to approve it, then move on.\n3. Where an app needs a key, tell me the page to get it from and the exact command to run in my terminal (`shopify-ops-mcp login <app>`). Do not ask me to paste a key into this chat.\n4. Call `connection_status` again and tell me what is still missing."
+    },
+    {
+      "name": "low_stock_to_supplier_po_draft",
+      "description": "Reorders drafted before a bestseller goes out of stock.",
+      "text": "Low stock → supplier PO draft. Reorders drafted before a bestseller goes out of stock.\n\nUse these tools, in this order:\n1. `shopify_products_list`\n2. `shopify_variant_inventory_level`\n3. `gsheets_spreadsheets_values_append`\n4. `gmail_drafts_create`\n\nBefore anything else, check whether any of these tools' apps is not connected: the server's instructions say, and so does `connection_status`. If one is not, tell me how to connect it first, before asking me for anything.\nRead before you write. Before any call that creates, sends, changes or deletes something, show me what it will do and wait for my go-ahead, unless I have told you to go ahead without asking.\nIf a tool says its app is not connected, tell me how to connect it, as the tool says, and stop there."
+    },
+    {
+      "name": "daily_sales_digest",
+      "description": "Yesterday's orders, revenue and top products, posted and logged.",
+      "text": "Daily sales digest. Yesterday's orders, revenue and top products, posted and logged.\n\nUse these tools, in this order:\n1. `shopify_orders_list`\n2. `gsheets_spreadsheets_values_append`\n3. `slack_chat_post_message`\n\nBefore anything else, check whether any of these tools' apps is not connected: the server's instructions say, and so does `connection_status`. If one is not, tell me how to connect it first, before asking me for anything.\nRead before you write. Before any call that creates, sends, changes or deletes something, show me what it will do and wait for my go-ahead, unless I have told you to go ahead without asking.\nIf a tool says its app is not connected, tell me how to connect it, as the tool says, and stop there."
+    },
+    {
+      "name": "where_is_my_order_replies",
+      "description": "The commonest support email answered with the actual fulfillment status.",
+      "text": "Where-is-my-order replies. The commonest support email answered with the actual fulfillment status.\n\nUse these tools, in this order:\n1. `gmail_threads_list`\n2. `shopify_orders_list`\n3. `shopify_order_fulfillment_orders`\n4. `gmail_drafts_create`\n\nBefore anything else, check whether any of these tools' apps is not connected: the server's instructions say, and so does `connection_status`. If one is not, tell me how to connect it first, before asking me for anything.\nRead before you write. Before any call that creates, sends, changes or deletes something, show me what it will do and wait for my go-ahead, unless I have told you to go ahead without asking.\nIf a tool says its app is not connected, tell me how to connect it, as the tool says, and stop there."
+    },
+    {
+      "name": "competitor_product_price_watch",
+      "description": "A competitor undercuts a SKU and you see both prices side by side.",
+      "text": "Competitor product price watch. A competitor undercuts a SKU and you see both prices side by side.\n\nUse these tools, in this order:\n1. `firecrawl_monitor_create`\n2. `firecrawl_extract`\n3. `shopify_product_get`\n4. `slack_chat_post_message`\n\nBefore anything else, check whether any of these tools' apps is not connected: the server's instructions say, and so does `connection_status`. If one is not, tell me how to connect it first, before asking me for anything.\nRead before you write. Before any call that creates, sends, changes or deletes something, show me what it will do and wait for my go-ahead, unless I have told you to go ahead without asking.\nIf a tool says its app is not connected, tell me how to connect it, as the tool says, and stop there."
+    },
+    {
+      "name": "supplier_sheet_to_new_products",
+      "description": "A season's catalogue goes from spreadsheet to store draft in one run.",
+      "text": "Supplier sheet → new products. A season's catalogue goes from spreadsheet to store draft in one run.\n\nUse these tools, in this order:\n1. `gsheets_spreadsheets_values_get`\n2. `shopify_product_create`\n3. `shopify_product_variants_bulk_create`\n4. `slack_chat_post_message`\n\nBefore anything else, check whether any of these tools' apps is not connected: the server's instructions say, and so does `connection_status`. If one is not, tell me how to connect it first, before asking me for anything.\nRead before you write. Before any call that creates, sends, changes or deletes something, show me what it will do and wait for my go-ahead, unless I have told you to go ahead without asking.\nIf a tool says its app is not connected, tell me how to connect it, as the tool says, and stop there."
+    },
+    {
+      "name": "product_copy_from_the_supplier_s_page",
+      "description": "Specs and materials pulled from the manufacturer, written as your listing.",
+      "text": "Product copy from the supplier's page. Specs and materials pulled from the manufacturer, written as your listing.\n\nUse these tools, in this order:\n1. `firecrawl_scrape`\n2. `shopify_product_update`\n\nBefore anything else, check whether any of these tools' apps is not connected: the server's instructions say, and so does `connection_status`. If one is not, tell me how to connect it first, before asking me for anything.\nRead before you write. Before any call that creates, sends, changes or deletes something, show me what it will do and wait for my go-ahead, unless I have told you to go ahead without asking.\nIf a tool says its app is not connected, tell me how to connect it, as the tool says, and stop there."
+    },
+    {
+      "name": "wholesale_order_by_email_to_draft_order",
+      "description": "B2B buyers email a list and get an invoice link back.",
+      "text": "Wholesale order by email → draft order. B2B buyers email a list and get an invoice link back.\n\nUse these tools, in this order:\n1. `gmail_threads_get`\n2. `shopify_customers_list`\n3. `shopify_draft_order_create`\n4. `gmail_drafts_create`\n\nBefore anything else, check whether any of these tools' apps is not connected: the server's instructions say, and so does `connection_status`. If one is not, tell me how to connect it first, before asking me for anything.\nRead before you write. Before any call that creates, sends, changes or deletes something, show me what it will do and wait for my go-ahead, unless I have told you to go ahead without asking.\nIf a tool says its app is not connected, tell me how to connect it, as the tool says, and stop there."
+    },
+    {
+      "name": "cancellation_request_handled",
+      "description": "Unfulfilled orders cancelled on request with the confirmation drafted.",
+      "text": "Cancellation request handled. Unfulfilled orders cancelled on request with the confirmation drafted.\n\nUse these tools, in this order:\n1. `gmail_threads_get`\n2. `shopify_order_get`\n3. `shopify_order_cancel`\n4. `gmail_drafts_create`\n\nBefore anything else, check whether any of these tools' apps is not connected: the server's instructions say, and so does `connection_status`. If one is not, tell me how to connect it first, before asking me for anything.\nRead before you write. Before any call that creates, sends, changes or deletes something, show me what it will do and wait for my go-ahead, unless I have told you to go ahead without asking.\nIf a tool says its app is not connected, tell me how to connect it, as the tool says, and stop there."
+    },
+    {
+      "name": "vip_customer_outreach",
+      "description": "Top spenders get a personal note before a launch, not a blast.",
+      "text": "VIP customer outreach. Top spenders get a personal note before a launch, not a blast.\n\nUse these tools, in this order:\n1. `shopify_customers_list`\n2. `gsheets_spreadsheets_values_update`\n3. `gmail_drafts_create`\n\nBefore anything else, check whether any of these tools' apps is not connected: the server's instructions say, and so does `connection_status`. If one is not, tell me how to connect it first, before asking me for anything.\nRead before you write. Before any call that creates, sends, changes or deletes something, show me what it will do and wait for my go-ahead, unless I have told you to go ahead without asking.\nIf a tool says its app is not connected, tell me how to connect it, as the tool says, and stop there."
+    },
+    {
+      "name": "fulfillment_exceptions",
+      "description": "Orders unfulfilled after 48 hours become an ops issue with the order attached.",
+      "text": "Fulfillment exceptions. Orders unfulfilled after 48 hours become an ops issue with the order attached.\n\nUse these tools, in this order:\n1. `shopify_orders_list`\n2. `shopify_order_fulfillment_orders`\n3. `linear_issue_create`\n4. `slack_chat_post_message`\n\nBefore anything else, check whether any of these tools' apps is not connected: the server's instructions say, and so does `connection_status`. If one is not, tell me how to connect it first, before asking me for anything.\nRead before you write. Before any call that creates, sends, changes or deletes something, show me what it will do and wait for my go-ahead, unless I have told you to go ahead without asking.\nIf a tool says its app is not connected, tell me how to connect it, as the tool says, and stop there."
+    },
+    {
+      "name": "stock_count_from_a_sheet",
+      "description": "The warehouse's count becomes the store's inventory without manual edits.",
+      "text": "Stock count from a sheet. The warehouse's count becomes the store's inventory without manual edits.\n\nUse these tools, in this order:\n1. `gsheets_spreadsheets_values_get`\n2. `shopify_locations_list`\n3. `shopify_inventory_adjust_quantities`\n\nBefore anything else, check whether any of these tools' apps is not connected: the server's instructions say, and so does `connection_status`. If one is not, tell me how to connect it first, before asking me for anything.\nRead before you write. Before any call that creates, sends, changes or deletes something, show me what it will do and wait for my go-ahead, unless I have told you to go ahead without asking.\nIf a tool says its app is not connected, tell me how to connect it, as the tool says, and stop there."
+    },
+    {
+      "name": "shopify_and_stripe_revenue_in_one_sheet",
+      "description": "Stores selling in two places see one revenue number.",
+      "text": "Shopify + Stripe revenue in one sheet. Stores selling in two places see one revenue number.\n\nUse these tools, in this order:\n1. `shopify_orders_list`\n2. `stripe_balance_transactions_list`\n3. `gsheets_spreadsheets_values_append`\n\nBefore anything else, check whether any of these tools' apps is not connected: the server's instructions say, and so does `connection_status`. If one is not, tell me how to connect it first, before asking me for anything.\nRead before you write. Before any call that creates, sends, changes or deletes something, show me what it will do and wait for my go-ahead, unless I have told you to go ahead without asking.\nIf a tool says its app is not connected, tell me how to connect it, as the tool says, and stop there."
+    }
+  ],
+  "user_config": {
+    "shopify_shop": {
+      "type": "string",
+      "title": "Shopify: Store domain (your-store.myshopify.com)",
+      "description": "Optional. Get it at https://dev.shopify.com/dashboard",
+      "sensitive": false,
+      "required": false,
+      "default": ""
+    },
+    "shopify_client_id": {
+      "type": "string",
+      "title": "Shopify: App client ID",
+      "description": "Optional. Get it at https://dev.shopify.com/dashboard",
+      "sensitive": false,
+      "required": false,
+      "default": ""
+    },
+    "shopify_client_secret": {
+      "type": "string",
+      "title": "Shopify: App client secret",
+      "description": "Optional. Get it at https://dev.shopify.com/dashboard",
+      "sensitive": true,
+      "required": false,
+      "default": ""
+    },
+    "google_client_id": {
+      "type": "string",
+      "title": "Google: OAuth client ID",
+      "description": "Optional. Your own OAuth client, made at https://console.cloud.google.com/auth/clients; with it set, ask Claude to connect Google.",
+      "sensitive": false,
+      "required": false,
+      "default": ""
+    },
+    "google_client_secret": {
+      "type": "string",
+      "title": "Google: OAuth client secret",
+      "description": "Optional. Your own OAuth client, made at https://console.cloud.google.com/auth/clients; with it set, ask Claude to connect Google.",
+      "sensitive": true,
+      "required": false,
+      "default": ""
+    },
+    "slack_bot_token": {
+      "type": "string",
+      "title": "Slack: Bot token (xoxb-…)",
+      "description": "Optional. Get it at https://docs.r28.ai/charter/auth/setup/slack",
+      "sensitive": true,
+      "required": false,
+      "default": ""
+    },
+    "firecrawl_api_key": {
+      "type": "string",
+      "title": "Firecrawl: API key",
+      "description": "Optional. Get it at https://www.firecrawl.dev/app/api-keys",
+      "sensitive": true,
+      "required": false,
+      "default": ""
+    },
+    "linear_api_key": {
+      "type": "string",
+      "title": "Linear: Personal API key",
+      "description": "Optional. Get it at https://linear.app/settings/account/security",
+      "sensitive": true,
+      "required": false,
+      "default": ""
+    },
+    "stripe_api_key": {
+      "type": "string",
+      "title": "Stripe: Secret or restricted key",
+      "description": "Optional. Get it at https://dashboard.stripe.com/apikeys",
+      "sensitive": true,
+      "required": false,
+      "default": ""
+    }
+  }
+}
